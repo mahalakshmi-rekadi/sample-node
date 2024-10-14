@@ -1,33 +1,54 @@
 name: Release (Private Packages)
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".changeset/**"
+      - ".github/workflows/packages-release.yml"
   workflow_dispatch:
+env:
+  CI: true
+  PNPM_CACHE_FOLDER: .pnpm-store
 jobs:
   version_or_release:
     name: 'Version and open PR (or) release private packages'
+    timeout-minutes: 15
     runs-on: ubuntu-latest
+    environment: 'Production - Private Packages'
     steps:
-  - name: Checkout code
-    uses: actions/checkout@v4
-    with:
-      ref: dev
-
-  - name: Set up SSH
-    uses: webfactory/ssh-agent@v0.9.0
-    with:
-      ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_RUNNER }}
-
-  - name: Add SSH known hosts
-    run: |
-      mkdir -p ~/.ssh
-      ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.HOST_DEV }} >> ~/.ssh/known_hosts
-
-  - name: Deploy to server
-    run: |
-      ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.HOST_USER }}@${{ secrets.HOST_DEV }} << 'EOF'
-        cd /home/app
-        git checkout dev
-        git pull origin dev
-        yarn
-        yarn db:migrate
-        pm2 restart crm_backend
-      EOF
+      - name: checkout code repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - name: setup node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - name: setup pnpm store config
+        run: pnpm config set store-dir $PNPM_CACHE_FOLDER
+      - name: install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: setup npmrc file to configure pnpm
+        run: |
+          cat << EOF > "$HOME/.npmrc"
+            @mycompany:registry=https://npm.pkg.github.com
+            //npm.pkg.github.com/:_authToken=$NPM_PUBLISH_TOKEN
+            //registry.npmjs.org/:_authToken=null
+          EOF
+        env:
+          NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          HOME: ${{ github.workspace }}
+      - name: create and publish versions
+        uses: changesets/action@v1
+        with:
+          cwd: ${{ github.workspace }}
+          version: pnpm run version
+          commit: "chore: update package versions"
+          title: "Release (Private Packages)"
+          publish: pnpm run publish:ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOME: ${{ github.workspace }}
