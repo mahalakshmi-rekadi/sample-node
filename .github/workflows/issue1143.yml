@@ -8,8 +8,9 @@ on:
       - ".github/workflows/packages-release.yml"
   workflow_dispatch:
 env:
-  CI: true
-  PNPM_CACHE_FOLDER: .pnpm-store
+    CI: true
+    PNPM_CACHE_FOLDER: .pnpm-store
+    PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
 jobs:
   version_or_release:
     name: 'Version and open PR (or) release private packages'
