@@ -32,8 +32,7 @@ jobs:
           node-version: 18
           cache: 'pnpm'
       
-      - name: install dependencies
-        run: pnpm install --frozen-lockfile
+      
       - name: setup npmrc file to configure pnpm
         run: |
           cat << EOF > "$HOME/.npmrc"
