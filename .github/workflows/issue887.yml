@@ -11,6 +11,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: frontend/educator/.nvmrc
           cache: 'yarn'
-          cache-dependency-path: '**/yarn.lock'
+          cache-dependency-path: frontend/educator/**/yarn.lock
+          always-auth: false
+          check-latest: false
+           token:***
