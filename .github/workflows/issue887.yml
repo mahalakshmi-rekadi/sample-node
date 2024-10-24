@@ -1,16 +1,29 @@
-name: CI Build     
+name: user post setup Tests with v3
 on:
  workflow_dispatch:
 
+env:
+  PNPM_CACHE_FOLDER: .pnpm-store
 jobs:
-  build-webfrontend:
+  version_or_release:
+    name: 'Version and open PR (or) release private packages'
+    timeout-minutes: 15
     runs-on: ubuntu-latest
+    environment: 'Production - Private Packages'
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: checkout code repository
+        uses: actions/checkout@v3
         with:
-         node-version: "20"
-         cache: 'yarn'
-         cache-dependency-path: '**/yarn.lock'
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - name: setup node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - name: setup pnpm store config
+        run: pnpm config set store-dir $PNPM_CACHE_FOLDER
+      - name: install dependencies
+        run: pnpm install --frozen-lockfile
          
          
