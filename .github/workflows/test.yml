@@ -3,21 +3,7 @@ on:
     workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.0.x
-    - name: Restore dependencies
-      run: dotnet restore PowerThreadPool/PowerThreadPool.csproj
-    - name: Build
-      run: dotnet build PowerThreadPool/PowerThreadPool.csproj --no-restore
-
   tests-and-reports:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
